@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Cronômetro de treino com intervalos personalizáveis">
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQ3Jvbm9tZXRybyBkZSBUcmVpbm8iLCJzaG9ydF9uYW1lIjoiVHJlaW5vIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiM2NjdlZWEiLCJ0aGVtZV9jb2xvciI6IiM2NjdlZWEiLCJpY29ucyI6W3sic3JjIjoiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJyUzRSUzQ2NpcmNsZSBjeD0nNTAnIGN5PSc1MCcgcj0nNDUnIGZpbGw9JyUyMzY2N2VlYScvJTNFJTNDdGV4dCB4PSc1MCcgeT0nNjUnIGZvbnQtc2l6ZT0nNTAnIGZpbGw9J3doaXRlJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyUzRSVFMiU4RiVCMSUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsInNpemVzIjoiNTEyeDUxMiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23667eea'/%3E%3Ctext x='50' y='65' font-size='50' fill='white' text-anchor='middle'%3E⏱%3C/text%3E%3C/svg%3E">
     <title>Cronômetro de Treino</title>
     <style>
         * {
@@ -12,7 +16,7 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -21,6 +25,8 @@
             align-items: center;
             color: white;
             padding: 20px;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .container {
@@ -125,9 +131,9 @@
             color: white;
         }
 
-        .btn-start:hover {
+        .btn-start:active {
             background: #059669;
-            transform: translateY(-2px);
+            transform: scale(0.95);
         }
 
         .btn-stop {
@@ -135,9 +141,9 @@
             color: white;
         }
 
-        .btn-stop:hover {
+        .btn-stop:active {
             background: #dc2626;
-            transform: translateY(-2px);
+            transform: scale(0.95);
         }
 
         .btn-reset {
@@ -145,15 +151,14 @@
             color: white;
         }
 
-        .btn-reset:hover {
+        .btn-reset:active {
             background: #d97706;
-            transform: translateY(-2px);
+            transform: scale(0.95);
         }
 
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none !important;
         }
 
         .phase-work {
@@ -230,6 +235,21 @@
     </div>
 
     <script>
+        // Registra Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', (e) => {
+                    e.waitUntil(caches.open('treino-v1').then(cache => cache.addAll(['/'])));
+                });
+                self.addEventListener('fetch', (e) => {
+                    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl);
+        }
+
         let audioContext = null;
         let soundEnabled = false;
         
@@ -332,16 +352,13 @@
                 currentPhaseTime--;
                 updateDisplay();
                 
-                // Aviso nos últimos 3 segundos da fase
                 if (currentPhaseTime <= 3 && currentPhaseTime > 0) {
                     playWarningBeep();
                 }
                 
-                // Acabou a fase atual
                 if (currentPhaseTime === 0) {
                     playPhaseEndBeep();
                     
-                    // Se ainda tem tempo total, muda de fase
                     if (totalTimeRemaining > 0) {
                         setTimeout(() => {
                             switchPhase();
@@ -350,7 +367,6 @@
                     }
                 }
                 
-                // Acabou o tempo total
                 if (totalTimeRemaining === 0) {
                     stopTimer();
                     timerLabel.textContent = '🎉 TREINO CONCLUÍDO!';
@@ -365,7 +381,6 @@
             initAudio();
             
             if (!isRunning) {
-                // Se está resetado, inicializa os valores
                 if (totalTimeRemaining === 0) {
                     const minutes = parseInt(totalMinutesInput.value);
                     totalTimeRemaining = minutes * 60;
@@ -422,12 +437,8 @@
         btnStop.addEventListener('click', stopTimer);
         btnReset.addEventListener('click', resetTimer);
 
-        // Prevenir que a tela desligue
-        let wakeLock = null;
         if ('wakeLock' in navigator) {
-            navigator.wakeLock.request('screen').then(wl => {
-                wakeLock = wl;
-            }).catch(() => {});
+            navigator.wakeLock.request('screen').catch(() => {});
         }
     </script>
 </body>
