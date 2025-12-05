@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronômetro de Treino</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .timer-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .timer-total {
+            font-size: 48px;
+            font-weight: bold;
+            color: #fbbf24;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .timer-total-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        .timer-current {
+            font-size: 72px;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .timer-label {
+            font-size: 20px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .settings {
+            margin-bottom: 30px;
+        }
+
+        .setting-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-start {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-start:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-stop {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .btn-reset {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .phase-work {
+            animation: pulse-work 1.5s infinite;
+        }
+
+        @keyframes pulse-work {
+            0%, 100% { background: rgba(239, 68, 68, 0.3); }
+            50% { background: rgba(239, 68, 68, 0.5); }
+        }
+
+        .phase-rest {
+            animation: pulse-rest 1.5s infinite;
+        }
+
+        @keyframes pulse-rest {
+            0%, 100% { background: rgba(16, 185, 129, 0.3); }
+            50% { background: rgba(16, 185, 129, 0.5); }
+        }
+
+        .finished {
+            animation: celebrate 0.5s infinite;
+            background: rgba(251, 191, 36, 0.5) !important;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .sound-status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱️ Cronômetro de Treino</h1>
+        
+        <div class="timer-display" id="timerDisplay">
+            <div class="timer-total" id="timerTotal">00:00</div>
+            <div class="timer-total-label">Tempo Total Restante</div>
+            <div class="timer-current" id="timerCurrent">00:00</div>
+            <div class="timer-label" id="timerLabel">Pronto para começar</div>
+        </div>
+
+        <div class="settings">
+            <div class="setting-group">
+                <label for="totalMinutes">⏰ Tempo Total do Treino (minutos):</label>
+                <input type="number" id="totalMinutes" value="15" min="1" max="120">
+            </div>
+            <div class="setting-group">
+                <label for="workTime">💪 Tempo de Treino (segundos):</label>
+                <input type="number" id="workTime" value="20" min="1" max="300">
+            </div>
+            <div class="setting-group">
+                <label for="restTime">😌 Tempo de Descanso (segundos):</label>
+                <input type="number" id="restTime" value="10" min="1" max="300">
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn-start" id="btnStart">Iniciar</button>
+            <button class="btn-stop" id="btnStop" disabled>Parar</button>
+            <button class="btn-reset" id="btnReset">Resetar</button>
+        </div>
+
+        <div class="sound-status" id="soundStatus">
+            🔊 Clique em Iniciar para ativar o som
+        </div>
+    </div>
+
+    <script>
+        let audioContext = null;
+        let soundEnabled = false;
+        
+        let totalTimeRemaining = 0;
+        let currentPhaseTime = 0;
+        let workTime = 0;
+        let restTime = 0;
+        let isWorkPhase = true;
+        let isRunning = false;
+        let intervalId = null;
+
+        const timerTotal = document.getElementById('timerTotal');
+        const timerCurrent = document.getElementById('timerCurrent');
+        const timerLabel = document.getElementById('timerLabel');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const btnStart = document.getElementById('btnStart');
+        const btnStop = document.getElementById('btnStop');
+        const btnReset = document.getElementById('btnReset');
+        const totalMinutesInput = document.getElementById('totalMinutes');
+        const workTimeInput = document.getElementById('workTime');
+        const restTimeInput = document.getElementById('restTime');
+        const soundStatus = document.getElementById('soundStatus');
+
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                soundEnabled = true;
+                soundStatus.textContent = '🔊 Som ativado';
+                playBeep(400, 0.05, 0.1);
+            }
+        }
+
+        function playBeep(frequency = 800, duration = 0.15, volume = 0.5) {
+            if (!audioContext || !soundEnabled) return;
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = frequency;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            } catch (e) {
+                console.log('Erro ao tocar som:', e);
+            }
+        }
+
+        function playWarningBeep() {
+            playBeep(700, 0.12, 0.4);
+        }
+
+        function playPhaseEndBeep() {
+            playBeep(1000, 0.25, 0.6);
+            setTimeout(() => playBeep(1200, 0.25, 0.6), 200);
+        }
+
+        function playFinishSound() {
+            playBeep(800, 0.4, 0.7);
+            setTimeout(() => playBeep(1000, 0.4, 0.7), 450);
+            setTimeout(() => playBeep(1200, 0.6, 0.8), 900);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            timerTotal.textContent = formatTime(totalTimeRemaining);
+            timerCurrent.textContent = formatTime(currentPhaseTime);
+        }
+
+        function switchPhase() {
+            isWorkPhase = !isWorkPhase;
+            currentPhaseTime = isWorkPhase ? workTime : restTime;
+            
+            if (isWorkPhase) {
+                timerLabel.textContent = '💪 TREINO';
+                timerDisplay.classList.remove('phase-rest');
+                timerDisplay.classList.add('phase-work');
+            } else {
+                timerLabel.textContent = '😌 DESCANSO';
+                timerDisplay.classList.remove('phase-work');
+                timerDisplay.classList.add('phase-rest');
+            }
+        }
+
+        function tick() {
+            if (totalTimeRemaining > 0 && currentPhaseTime > 0) {
+                totalTimeRemaining--;
+                currentPhaseTime--;
+                updateDisplay();
+                
+                // Aviso nos últimos 3 segundos da fase
+                if (currentPhaseTime <= 3 && currentPhaseTime > 0) {
+                    playWarningBeep();
+                }
+                
+                // Acabou a fase atual
+                if (currentPhaseTime === 0) {
+                    playPhaseEndBeep();
+                    
+                    // Se ainda tem tempo total, muda de fase
+                    if (totalTimeRemaining > 0) {
+                        setTimeout(() => {
+                            switchPhase();
+                            updateDisplay();
+                        }, 500);
+                    }
+                }
+                
+                // Acabou o tempo total
+                if (totalTimeRemaining === 0) {
+                    stopTimer();
+                    timerLabel.textContent = '🎉 TREINO CONCLUÍDO!';
+                    timerDisplay.classList.remove('phase-work', 'phase-rest');
+                    timerDisplay.classList.add('finished');
+                    playFinishSound();
+                }
+            }
+        }
+
+        function startTimer() {
+            initAudio();
+            
+            if (!isRunning) {
+                // Se está resetado, inicializa os valores
+                if (totalTimeRemaining === 0) {
+                    const minutes = parseInt(totalMinutesInput.value);
+                    totalTimeRemaining = minutes * 60;
+                    workTime = parseInt(workTimeInput.value);
+                    restTime = parseInt(restTimeInput.value);
+                    isWorkPhase = true;
+                    currentPhaseTime = workTime;
+                }
+                
+                isRunning = true;
+                intervalId = setInterval(tick, 1000);
+                
+                btnStart.disabled = true;
+                btnStop.disabled = false;
+                totalMinutesInput.disabled = true;
+                workTimeInput.disabled = true;
+                restTimeInput.disabled = true;
+                
+                timerLabel.textContent = '💪 TREINO';
+                timerDisplay.classList.add('phase-work');
+                
+                updateDisplay();
+            }
+        }
+
+        function stopTimer() {
+            isRunning = false;
+            clearInterval(intervalId);
+            
+            btnStart.disabled = false;
+            btnStop.disabled = true;
+            timerDisplay.classList.remove('phase-work', 'phase-rest');
+            
+            if (totalTimeRemaining > 0) {
+                timerLabel.textContent = '⏸️ Pausado';
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            totalTimeRemaining = 0;
+            currentPhaseTime = 0;
+            isWorkPhase = true;
+            timerTotal.textContent = '00:00';
+            timerCurrent.textContent = '00:00';
+            timerLabel.textContent = 'Pronto para começar';
+            totalMinutesInput.disabled = false;
+            workTimeInput.disabled = false;
+            restTimeInput.disabled = false;
+            timerDisplay.classList.remove('finished', 'phase-work', 'phase-rest');
+        }
+
+        btnStart.addEventListener('click', startTimer);
+        btnStop.addEventListener('click', stopTimer);
+        btnReset.addEventListener('click', resetTimer);
+
+        // Prevenir que a tela desligue
+        let wakeLock = null;
+        if ('wakeLock' in navigator) {
+            navigator.wakeLock.request('screen').then(wl => {
+                wakeLock = wl;
+            }).catch(() => {});
+        }
+    </script>
+</body>
+</html>
