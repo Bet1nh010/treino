@@ -5,9 +5,9 @@
   "display": "standalone",
   "name": "bet1nh010.github",
   "orientation": "any",
-  "scope": "/",
+  "scope": "./",
   "short_name": "CronometroTreino",
-  "start_url": "/",
+  "start_url": "./index.html",
   "theme_color": "#667eea",
   "icons": [
     {
